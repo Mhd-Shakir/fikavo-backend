@@ -8,7 +8,7 @@ const PORT = process.env.PORT || 5001;
 
 // --- Middlewares ---
 app.use(cors({
-  origin: ['VITE_API_BASE_URL_BKD'], // ✅ Allow only your frontend domain
+  origin: ['FORNTEND_URL'], // ✅ Allow only your frontend domain
   credentials: true,
 }));
 app.use(express.json());
