@@ -8,7 +8,7 @@ const PORT = process.env.PORT || 5001;
 
 // --- Middlewares ---
 app.use(cors({
-  origin: ['https://fikavo.vercel.app'], // ✅ Allow only your frontend domain
+  origin: ['VITE_API_BASE_URL'], // ✅ Allow only your frontend domain
   credentials: true,
 }));
 app.use(express.json());
