@@ -32,13 +32,6 @@ router.get('/messages', authMiddleware, async (req, res) => {
   }
 });
 
-router.get('/messages', authMiddleware, async (req, res) => {
-  // ✅ This runs ONLY if token is valid
-  const messages = await Contact.find();
-  res.status(200).json({ success: true, messages });
-});
-
-
 // --- Protected: Delete Single Message ---
 router.delete('/messages/:id', authMiddleware, async (req, res) => {
   try {
