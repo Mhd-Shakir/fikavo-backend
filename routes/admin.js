@@ -7,23 +7,29 @@ const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 const JWT_SECRET = process.env.JWT_SECRET;
 
-// Admin login route
+// POST /api/admin/login
 router.post('/login', (req, res) => {
   const { email, password } = req.body;
 
-  // Basic validation
+  // ✅ 1. Validate inputs
   if (!email || !password) {
-    return res.status(400).json({ message: 'Email and password are required' });
+    return res.status(400).json({ success: false, message: 'Email and password are required' });
   }
 
-  // Check credentials
+  // ✅ 2. Match credentials
   if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+    // ✅ 3. Sign token with minimal payload
     const token = jwt.sign({ email }, JWT_SECRET, { expiresIn: '1d' });
-    return res.json({ token });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Login successful',
+      token,
+    });
   }
 
-  // Invalid login
-  res.status(401).json({ message: 'Invalid email or password' });
+  // ❌ Invalid credentials
+  res.status(401).json({ success: false, message: 'Invalid email or password' });
 });
 
 module.exports = router;

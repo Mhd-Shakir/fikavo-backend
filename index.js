@@ -1,16 +1,20 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-require('dotenv').config(); // Load environment variables early
+require('dotenv').config(); // Load environment variables
 
 const app = express();
 const PORT = process.env.PORT || 5001;
 
-// --- Middlewares ---
+// --- CORS Setup ---
 app.use(cors({
-  origin: [process.env.FRONTEND_URL], // ✅ Allow only your frontend domain
+  origin: process.env.FRONTEND_URL, // e.g., 'https://fikavo.vercel.app'
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
+
+// --- Body Parser ---
 app.use(express.json());
 
 // --- MongoDB Connection ---
@@ -30,8 +34,8 @@ app.get('/', (req, res) => {
 const contactRoutes = require('./routes/contact');
 const adminRoutes = require('./routes/admin');
 
-app.use('/api/contact', contactRoutes);       // Handles contact form (POST, GET, DELETE)
-app.use('/api/admin', adminRoutes);           // Handles admin login (POST /login)
+app.use('/api/contact', contactRoutes); // Protected: requires token
+app.use('/api/admin', adminRoutes);     // Login route: issues token
 
 // --- Start Server ---
 app.listen(PORT, () => {
