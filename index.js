@@ -1,35 +1,36 @@
 require('dotenv').config();
 const express = require('express');
-const mongoose = require('mongoose');
 const cors = require('cors');
+const mongoose = require('mongoose');
 
-const contactRouter = require('./routes/contact'); // Handles contact + admin message fetch
-const authRouter = require('./routes/auth');       // Handles admin login
+const contactRoutes = require('./routes/contact');
+const adminRoutes = require('./routes/admin');
+const authRoutes = require('./routes/auth');
 
 const app = express();
 
 // Middleware
-app.use(express.json());
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173', // Allow requests from frontend URL
+  origin: process.env.FRONTEND_URL,
+  credentials: true
 }));
+app.use(express.json());
 
 // Routes
-app.use('/api/contact', contactRouter); // POST / (public), GET /messages (admin)
-app.use('/api/contact', authRouter);    // POST /login (admin login route)
+app.use('/api/contact', contactRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/auth', authRoutes); // if needed later
 
-// OR (if using /api/admin path style)
-// app.use('/api/admin', require('./routes/admin'));
-
-
-// DB Connection
+// MongoDB connection
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
 .then(() => console.log('✅ MongoDB connected'))
-.catch(err => console.error('❌ MongoDB connection error:', err));
+.catch((err) => console.error('❌ MongoDB connection error:', err));
 
-// Start Server
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server listening on port ${PORT}`));
+// Start server
+const PORT = process.env.PORT || 5001;
+app.listen(PORT, () => {
+  console.log(`🚀 Server is running on port ${PORT}`);
+});
