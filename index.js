@@ -1,3 +1,4 @@
+// server.js
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -9,17 +10,18 @@ const authRoutes = require('./routes/auth');
 
 const app = express();
 
-// Middleware
+// ✅ Proper CORS Setup
 app.use(cors({
-  origin: process.env.FRONTEND_URL,
-  credentials: true
+  origin: process.env.FRONTEND_URL, // Should be https://fikavo.vercel.app
+  credentials: true,
 }));
+
 app.use(express.json());
 
 // Routes
 app.use('/api/contact', contactRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/api/auth', authRoutes); // if needed later
+app.use('/api/auth', authRoutes);
 
 // MongoDB connection
 mongoose.connect(process.env.MONGO_URI, {
