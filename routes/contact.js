@@ -1,63 +1,45 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const Contact = require('../models/Contact');
-const authMiddleware = require('../middleware/authMiddleware');
+const ClientDetail = require("../models/Contact");
+const jwt = require("jsonwebtoken");
 
-// --- Public Contact Submission ---
-router.post('/', async (req, res) => {
-  const { name, email, message, company } = req.body;
+// 🔐 Middleware to verify token
+const verifyToken = (req, res, next) => {
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1]; // Bearer <token>
 
-  if (!name || !email || !message) {
-    return res.status(400).json({ error: "Required fields missing" });
+  if (!token) {
+    return res.status(401).json({ success: false, message: "Missing token" });
   }
 
+  jwt.verify(token, process.env.JWT_SECRET, (err, admin) => {
+    if (err) {
+      return res.status(401).json({ success: false, message: "Invalid token" });
+    }
+
+    req.admin = admin;
+    next();
+  });
+};
+
+// 📨 Save new contact message
+router.post("/", async (req, res) => {
   try {
-    const contact = new Contact({ name, email, message, company });
-    await contact.save();
-    res.status(201).json({ success: true, message: "Success" });
-  } catch (error) {
-    console.error("❌ Error saving contact:", error);
-    res.status(500).json({ success: false, error: "Server error" });
+    const newClient = new ClientDetail(req.body);
+    await newClient.save();
+    res.status(201).json({ success: true, message: "Message saved successfully" });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Server error" });
   }
 });
 
-// --- Protected: Get All Messages ---
-router.get('/messages', authMiddleware, async (req, res) => {
+// 🔐 Fetch messages (admin only)
+router.get("/messages", verifyToken, async (req, res) => {
   try {
-    const messages = await Contact.find().sort({ createdAt: -1 }); // Use timestamps
-    res.status(200).json({ success: true, messages });
-  } catch (error) {
-    console.error("❌ Error fetching messages:", error);
-    res.status(500).json({ success: false, error: "Server error" });
-  }
-});
-
-// --- Protected: Delete Single Message ---
-router.delete('/messages/:id', authMiddleware, async (req, res) => {
-  try {
-    const { id } = req.params;
-    await Contact.findByIdAndDelete(id);
-    res.status(200).json({ success: true, message: "Message deleted" });
-  } catch (error) {
-    console.error("❌ Error deleting message:", error);
-    res.status(500).json({ success: false, error: "Delete failed" });
-  }
-});
-
-// ✅ --- Protected: Bulk Delete Messages ---
-router.post('/messages/deleteMany', authMiddleware, async (req, res) => {
-  const { ids } = req.body;
-
-  if (!Array.isArray(ids) || ids.length === 0) {
-    return res.status(400).json({ success: false, error: "Invalid or missing IDs" });
-  }
-
-  try {
-    await Contact.deleteMany({ _id: { $in: ids } });
-    res.status(200).json({ success: true, message: "Messages deleted" });
-  } catch (error) {
-    console.error("❌ Error deleting messages:", error);
-    res.status(500).json({ success: false, error: "Bulk delete failed" });
+    const messages = await ClientDetail.find().sort({ createdAt: -1 });
+    res.json(messages);
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Server error" });
   }
 });
 

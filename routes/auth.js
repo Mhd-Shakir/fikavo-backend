@@ -1,32 +1,23 @@
-const express = require('express');
+const express = require("express");
+const jwt = require("jsonwebtoken");
 const router = express.Router();
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
-const Admin = require('../models/Admin'); // ✅ Ensure the path is correct
 
-router.post('/login', async (req, res) => {
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+const JWT_SECRET = process.env.JWT_SECRET;
+
+// Admin Login Route
+router.post("/login", (req, res) => {
   const { email, password } = req.body;
 
-  try {
-    const admin = await Admin.findOne({ email });
-    if (!admin) {
-      return res.status(401).json({ message: 'Invalid email or password' });
-    }
-
-    const isMatch = await bcrypt.compare(password, admin.password);
-    if (!isMatch) {
-      return res.status(401).json({ message: 'Invalid email or password' });
-    }
-
-    const token = jwt.sign({ id: admin._id }, process.env.JWT_SECRET, {
-      expiresIn: '1d',
-    });
-
-    res.json({ token });
-  } catch (err) {
-    console.error('Login Error:', err);
-    res.status(500).json({ message: 'Server error' });
+  if (email !== ADMIN_EMAIL || password !== ADMIN_PASSWORD) {
+    return res.status(401).json({ success: false, message: "Invalid credentials" });
   }
+
+  // Generate token
+  const token = jwt.sign({ email }, JWT_SECRET, { expiresIn: "1h" });
+
+  res.json({ success: true, token });
 });
 
 module.exports = router;

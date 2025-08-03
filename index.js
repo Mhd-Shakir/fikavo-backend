@@ -1,43 +1,35 @@
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-require('dotenv').config(); // Load environment variables
+
+const contactRouter = require('./routes/contact'); // Handles contact + admin message fetch
+const authRouter = require('./routes/auth');       // Handles admin login
 
 const app = express();
-const PORT = process.env.PORT || 5001;
 
-// --- CORS Setup ---
+// Middleware
+app.use(express.json());
 app.use(cors({
-  origin: process.env.FRONTEND_URL, // e.g., 'https://fikavo.vercel.app'
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  origin: process.env.CLIENT_URL || 'http://localhost:3000'
 }));
 
-// --- Body Parser ---
-app.use(express.json());
+// Routes
+app.use('/api/contact', contactRouter); // POST / (public), GET /messages (admin)
+app.use('/api/contact', authRouter);    // POST /login (admin login route)
 
-// --- MongoDB Connection ---
+// OR (if using /api/admin path style)
+// app.use('/api/admin', require('./routes/admin'));
+
+
+// DB Connection
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
-.then(() => console.log('✅ Connected to MongoDB Atlas'))
-.catch((err) => console.error('❌ MongoDB connection error:', err));
+.then(() => console.log('✅ MongoDB connected'))
+.catch(err => console.error('❌ MongoDB connection error:', err));
 
-// --- Test Route ---
-app.get('/', (req, res) => {
-  res.send('Hello from the Fikavo Backend!');
-});
-
-// --- Routes ---
-const contactRoutes = require('./routes/contact');
-const adminRoutes = require('./routes/admin');
-
-app.use('/api/contact', contactRoutes); // Protected: requires token
-app.use('/api/admin', adminRoutes);     // Login route: issues token
-
-// --- Start Server ---
-app.listen(PORT, () => {
-  console.log(`🚀 Server running at http://localhost:${PORT}`);
-});
+// Start Server
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`🚀 Server listening on port ${PORT}`));
