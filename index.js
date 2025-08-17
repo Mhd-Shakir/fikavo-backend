@@ -12,7 +12,7 @@ const app = express();
 
 // ✅ Proper CORS Setup
 app.use(cors({
-  origin: process.env.FRONTEND_URL, // Should be https://fikavo.vercel.app
+  origin: process.env.FRONTEND_URL,
   credentials: true,
 }));
 
