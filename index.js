@@ -14,14 +14,17 @@ const app = express();
 
 // CORS
 const allowedOrigins = [
-  process.env.FRONTEND_URL,            // e.g. https://fikavo.vercel.app
-  process.env.FRONTEND_URL_LOCAL || 'http://localhost:5173',
+  process.env.FRONTEND_URL,
+  process.env.FRONTEND_URL_LOCAL || "http://localhost:5173",
 ].filter(Boolean);
 
 app.use(
   cors({
     origin: allowedOrigins,
     credentials: true,
+    // add this to be explicit for preflight:
+    allowedHeaders: ["Content-Type", "Authorization"],
+    methods: ["GET", "POST", "DELETE", "PUT", "PATCH", "OPTIONS"],
   })
 );
 
