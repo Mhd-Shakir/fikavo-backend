@@ -1,6 +1,6 @@
-import express from "express";
-import multer from "multer";
-import { getProjects, addProject, deleteProject } from "../controllers/projectController.js";
+const express = require('express');
+const multer = require('multer');
+const { getProjects, addProject, deleteProject } = require('../controllers/projectController.js');
 
 const router = express.Router();
 
@@ -16,4 +16,4 @@ router.get("/", getProjects);
 router.post("/", upload.single("image"), addProject);
 router.delete("/:id", deleteProject);
 
-export default router;
+module.exports = router;
