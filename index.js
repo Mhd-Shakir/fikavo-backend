@@ -7,7 +7,7 @@ const mongoose = require('mongoose');
 const contactRoutes = require('./routes/contact');
 const adminRoutes = require('./routes/admin');
 const authRoutes = require('./routes/auth');
-const projectRoutes = require("./routes/project");
+const projectRoutes = require("./routes/projects");
 
 const app = express();
 
