@@ -7,6 +7,7 @@ const mongoose = require('mongoose');
 const contactRoutes = require('./routes/contact');
 const adminRoutes = require('./routes/admin');
 const authRoutes = require('./routes/auth');
+const projectRoutes = require("./routes/project");
 
 const app = express();
 
@@ -22,6 +23,7 @@ app.use(express.json());
 app.use('/api/contact', contactRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/projects', projectRoutes);
 
 // MongoDB connection
 mongoose.connect(process.env.MONGO_URI, {

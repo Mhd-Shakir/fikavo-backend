@@ -1,17 +1,21 @@
-// Backend/middleware/upload.js
-const multer = require('multer');
+const multer = require("multer");
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
+const cloudinary = require("cloudinary").v2;
 
-const storage = multer.memoryStorage();
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
-const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
-
-const upload = multer({
-  storage,
-  limits: { fileSize: 8 * 1024 * 1024 }, // 8MB
-  fileFilter: (req, file, cb) => {
-    if (allowed.includes(file.mimetype)) cb(null, true);
-    else cb(new Error('Only jpeg, jpg, png, webp images allowed'));
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: "fikavo_projects", // Cloudinary folder name
+    allowed_formats: ["jpg", "jpeg", "png", "webp"],
   },
 });
 
-module.exports = upload;
+const upload = multer({ storage });
+
+module.exports = { upload, cloudinary };
