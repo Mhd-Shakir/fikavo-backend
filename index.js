@@ -7,7 +7,7 @@ const mongoose = require('mongoose');
 const contactRoutes = require('./routes/contact');
 const adminRoutes = require('./routes/admin');
 const authRoutes = require('./routes/auth');
-const projectRoutes = require("./routes/projects");
+import projectRoutes from "./routes/projectRoutes.js";
 
 const app = express();
 
@@ -24,6 +24,7 @@ app.use('/api/contact', contactRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/auth', authRoutes);
 app.use("/api/projects", projectRoutes);
+app.use("/uploads", express.static("uploads"))
 
 // MongoDB connection
 mongoose.connect(process.env.MONGO_URI, {
