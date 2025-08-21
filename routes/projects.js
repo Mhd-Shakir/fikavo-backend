@@ -1,15 +1,43 @@
 const express = require("express");
-const { upload } = require("../middleware/upload");
-const { createProject, getProjects, deleteProject } = require("../controllers/projectController");
-const authMiddleware = require("../middleware/authMiddleware");
+const multer = require("multer");
+const cloudinary = require("../config/cloudinary");
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
 
 const router = express.Router();
 
-// Admin-only
-router.post("/", authMiddleware, upload.single("image"), createProject);
-router.delete("/:id", authMiddleware, deleteProject);
+// Configure multer storage with cloudinary
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: "fikavo_projects", // folder in cloudinary
+    allowed_formats: ["jpg", "jpeg", "png", "webp"],
+  },
+});
 
-// Public
-router.get("/", getProjects);
+const upload = multer({ storage });
+
+// @POST Upload project
+router.post("/", upload.single("image"), async (req, res) => {
+  try {
+    const { title, description } = req.body;
+
+    if (!req.file?.path) {
+      return res.status(400).json({ success: false, message: "Image upload failed" });
+    }
+
+    res.json({
+      success: true,
+      message: "Project uploaded successfully",
+      project: {
+        title,
+        description,
+        imageUrl: req.file.path, // Cloudinary image URL
+      },
+    });
+  } catch (err) {
+    console.error("Upload error:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
 
 module.exports = router;
