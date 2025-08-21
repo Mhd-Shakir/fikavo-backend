@@ -6,7 +6,6 @@
     "start": "nodemon index.js"
   },
   "keywords": [],
-  "type": "module",
   "author": "",
   "license": "ISC",
   "description": "",
