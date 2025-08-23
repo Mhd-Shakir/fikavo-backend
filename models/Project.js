@@ -12,10 +12,10 @@ const projectSchema = new mongoose.Schema({
     type: String,
     required: true, // Cloudinary URL
   },
-  cloudinary_id: {
-    type: String,
-    required: true, // Cloudinary public_id for deletion
-  },
+//   cloudinary_id: {
+//     type: String,
+//     required: true, // Cloudinary public_id for deletion
+//   },
   date: {
     type: Date,
     default: Date.now

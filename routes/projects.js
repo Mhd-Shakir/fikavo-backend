@@ -1,10 +1,17 @@
+const express = require('express');
+const router = express.Router();
+const cloudinary = require('../config/cloudinary'); // Use your cloudinary config
+const Project = require('../models/Project');
+const verifyAdmin = require('../middleware/authMiddleware'); // Your auth middleware (assuming it checks admin)
+const upload = require('../middleware/upload'); // Your upload middleware
+
 // POST create new project (admin only) - ENHANCED WITH DEBUG LOGGING
-router.post('/', verifyAdmin, upload.single('image'), async (req, res) => {
+router.post('/', upload.single('image'), async (req, res) => {
   console.log('🚀 === PROJECT CREATION DEBUG START ===');
   
   try {
     // Log incoming request details
-    console.log('📥 Request body:', req.body);
+    console.log('🔥 Request body:', req.body);
     console.log('📁 File info:', req.file ? {
       fieldname: req.file.fieldname,
       originalname: req.file.originalname,
@@ -90,3 +97,55 @@ router.post('/', verifyAdmin, upload.single('image'), async (req, res) => {
     });
   }
 });
+
+// GET all projects
+router.get('/', async (req, res) => {
+  try {
+    const projects = await Project.find().sort({ date: -1 });
+    res.json({
+      success: true,
+      projects
+    });
+  } catch (error) {
+    console.error('Error fetching projects:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch projects'
+    });
+  }
+});
+
+// DELETE project (admin only)
+router.delete('/:id', verifyAdmin, async (req, res) => {
+  try {
+    const project = await Project.findById(req.params.id);
+    
+    if (!project) {
+      return res.status(404).json({
+        success: false,
+        message: 'Project not found'
+      });
+    }
+
+    // Delete image from Cloudinary
+    if (project.cloudinary_id) {
+      await cloudinary.uploader.destroy(project.cloudinary_id);
+    }
+
+    // Delete project from database
+    await Project.findByIdAndDelete(req.params.id);
+
+    res.json({
+      success: true,
+      message: 'Project deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting project:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to delete project'
+    });
+  }
+});
+
+module.exports = router;
