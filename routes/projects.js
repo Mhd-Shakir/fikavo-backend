@@ -28,9 +28,17 @@ const upload = multer({
 // GET /api/projects - Get all projects (public)
 router.get('/', async (req, res) => {
   try {
-    const projects = await Project.find()
+    const { category } = req.query;
+    
+    // Build filter object
+    let filter = {};
+    if (category && category !== 'all') {
+      filter.category = category;
+    }
+    
+    const projects = await Project.find(filter)
       .sort({ updatedAt: -1 }) // Sort by most recently updated
-      .select('title image date link createdAt updatedAt');
+      .select('title image date link category createdAt updatedAt'); // Include category
 
     res.json({
       success: true,
@@ -48,7 +56,7 @@ router.get('/', async (req, res) => {
 // POST /api/projects - Create new project (admin only)
 router.post('/', authMiddleware, upload.single('image'), async (req, res) => {
   try {
-    const { title, date, link } = req.body;
+    const { title, date, link, category } = req.body;
 
     // Validate required fields
     if (!title || !title.trim()) {
@@ -62,6 +70,15 @@ router.post('/', authMiddleware, upload.single('image'), async (req, res) => {
       return res.status(400).json({
         success: false,
         message: 'Image is required'
+      });
+    }
+
+    // Validate category
+    const validCategories = ['websites', 'video-editing', 'graphic-design', 'branding'];
+    if (category && !validCategories.includes(category)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid category. Must be one of: ' + validCategories.join(', ')
       });
     }
 
@@ -81,7 +98,8 @@ router.post('/', authMiddleware, upload.single('image'), async (req, res) => {
     const projectData = {
       title: title.trim(),
       image: req.file.path,
-      date: date ? new Date(date) : new Date()
+      date: date ? new Date(date) : new Date(),
+      category: category || 'websites' // Default to websites if not provided
     };
 
     // Only add link if it's provided
@@ -120,7 +138,7 @@ router.post('/', authMiddleware, upload.single('image'), async (req, res) => {
 router.put('/:id', authMiddleware, upload.single('image'), async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, date, link } = req.body;
+    const { title, date, link, category } = req.body;
 
     // Find existing project
     const existingProject = await Project.findById(id);
@@ -139,6 +157,15 @@ router.put('/:id', authMiddleware, upload.single('image'), async (req, res) => {
       });
     }
 
+    // Validate category if provided
+    const validCategories = ['websites', 'video-editing', 'graphic-design', 'branding'];
+    if (category && !validCategories.includes(category)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid category. Must be one of: ' + validCategories.join(', ')
+      });
+    }
+
     // Validate link if provided
     if (link && link.trim()) {
       try {
@@ -154,7 +181,8 @@ router.put('/:id', authMiddleware, upload.single('image'), async (req, res) => {
     // Prepare update data
     const updateData = {
       title: title.trim(),
-      date: date ? new Date(date) : existingProject.date
+      date: date ? new Date(date) : existingProject.date,
+      category: category || existingProject.category // Keep existing category if not provided
     };
 
     // Handle link field
@@ -278,6 +306,44 @@ router.get('/:id', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to fetch project'
+    });
+  }
+});
+
+// GET /api/projects/categories/stats - Get project count by category (public)
+router.get('/categories/stats', async (req, res) => {
+  try {
+    const stats = await Project.aggregate([
+      {
+        $group: {
+          _id: '$category',
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    const categoryStats = {
+      websites: 0,
+      'video-editing': 0,
+      'graphic-design': 0,
+      branding: 0
+    };
+
+    stats.forEach(stat => {
+      if (categoryStats.hasOwnProperty(stat._id)) {
+        categoryStats[stat._id] = stat.count;
+      }
+    });
+
+    res.json({
+      success: true,
+      stats: categoryStats
+    });
+  } catch (error) {
+    console.error('Error fetching category stats:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch category statistics'
     });
   }
 });
